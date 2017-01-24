@@ -300,7 +300,7 @@
                       :models models}}))
       (internal-server-error (str "Not able retrieve content models for id: " space-id)))))
 
-(defn handle-get-all-branches
+(defn handle-activity-metadata-request
   "GET all branches in Activity model for owlet-activities-2 space"
   [req]
   (let [headers {:headers {"Authorization" (str "Bearer " OWLET-CONTENTFUL-MANAGEMENT-AUTH-TOKEN)}}
@@ -315,13 +315,13 @@
             activity-model-fields (:fields activity-model)
             validations (get-in (some #(when (= (:id %) "branch") %) activity-model-fields)
                                 [:items :validations])
+            skills  (get-in (some #(when (= (:id %) "skills") %) activity-model-fields)
+                          [:items :validations])
             branches (-> validations
                          first
-                         :in)
-
-            total (count branches)]
-        (ok {:branches {:total    total
-                        :branches branches}}))
+                         :in)]
+        (ok {:skills   skills
+             :branches branches}))
       (internal-server-error (str status ": not able retrieve branches for activity model")))))
 
 (defroutes api-routes
@@ -332,8 +332,8 @@
              (context "/content" []
                (GET "/models/:space-id" {params :params}
                  handle-get-models-by-space)
-               (GET "/branches/:space-id" {params :params}
-                 handle-get-all-branches)
+               (GET "/metadata/:space-id" {params :params}
+                 handle-activity-metadata-request)
                (GET "/entries"
                     {params :params} handle-get-all-entries-for-given-user-or-space)
                (POST "/entries"
