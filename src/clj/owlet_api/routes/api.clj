@@ -313,13 +313,13 @@
             items (body :items)
             activity-model (some #(when (= (:name %) "Activity") %) items)
             activity-model-fields (:fields activity-model)
-            validations (get-in (some #(when (= (:id %) "branch") %) activity-model-fields)
-                                [:items :validations])
-            skills  (get-in (some #(when (= (:id %) "skills") %) activity-model-fields)
-                          [:items :validations])
-            branches (-> validations
-                         first
-                         :in)]
+            pluck-prop (fn [prop]
+                         (-> (get-in (some #(when (= (:id %) prop) %) activity-model-fields)
+                                     [:items :validations])
+                             first
+                             :in))
+            skills (pluck-prop "skills")
+            branches (pluck-prop "branch")]
         (ok {:skills   skills
              :branches branches}))
       (internal-server-error (str status ": not able retrieve branches for activity model")))))
